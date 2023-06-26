@@ -1,0 +1,16 @@
+# SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
+
+description: GPIO KEYS parent node
+
+compatible: "gpio-km"
+
+child-binding:
+    description: GPIO KEYS child node
+    properties:
+       gpios:
+          type: phandle-array
+          required: true
+       label:
+          required: true
+          type: string
+          description: Human readable string describing the device (used as device_get_binding() argument)
