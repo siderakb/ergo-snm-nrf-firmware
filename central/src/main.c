@@ -178,6 +178,13 @@ bool keymatrix_init(void)
       LOG_ERR("Failed to configure GPIO %s pin %d, return: %d.", gpio.port->name, gpio.pin, ret);
       return false;
     }
+
+    ret = gpio_pin_set_dt(&gpio, 1); /* Unselect row by output HIGH. */
+    if (ret != 0)
+    {
+      LOG_ERR("Failed to set GPIO %s pin %d HIGH, return: %d.", gpio.port->name, gpio.pin, ret);
+      return false;
+    }
   }
 
   LOG_INF("Key matrix ready.");
@@ -392,7 +399,7 @@ void gzll_rx_result_handler(struct gzll_rx_result *rx_result)
   }
   else if (data_payload_length > 0)
   {
-    // Do something.
+    LOG_DBG("Gazell received");
   }
 
   /* Send. */
