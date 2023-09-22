@@ -1,0 +1,22 @@
+{
+	"folders": [
+		{
+			"path": "central"
+		},
+		{
+			"path": "peripheral"
+		}
+	],
+	"settings": {
+		"nrf-connect.topdir": "${nrf-connect.sdk:2.1.2}",
+		"nrf-connect.toolchain.path": "${nrf-connect.toolchain:2.1.2}",
+		"nrf-connect.applications": [
+			"${workspaceFolder:central}",
+			"${workspaceFolder:peripheral}",
+		],
+		"files.associations": {
+			"kernel.h": "c",
+			"main.h": "c"
+		},
+	}
+}
