@@ -324,6 +324,14 @@ bool gzll_init(void)
     return false;
   }
 
+  ack_payload[0] = 0x00;
+  ret = nrf_gzll_add_packet_to_tx_fifo(PIPE_NUMBER, ack_payload, TX_PAYLOAD_LENGTH);
+  if (!ret)
+  {
+    LOG_ERR("Cannot add packet to Gazell TX FIFO");
+    return;
+  }
+
   ret = nrf_gzll_enable();
   if (!ret)
   {
@@ -399,7 +407,7 @@ void gzll_rx_result_handler(struct gzll_rx_result *rx_result)
   }
   else if (data_payload_length > 0)
   {
-    LOG_DBG("Gazell received");
+    LOG_DBG("Gazell received%d", data_payload[0]);
   }
 
   /* Send. */

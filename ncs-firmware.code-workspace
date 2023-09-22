@@ -14,5 +14,9 @@
 			"${workspaceFolder:central}",
 			"${workspaceFolder:peripheral}",
 		],
+		"files.associations": {
+			"kernel.h": "c",
+			"main.h": "c"
+		},
 	}
 }

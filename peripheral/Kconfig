@@ -8,7 +8,7 @@ menu "Gazell Link Layer sample: Device"
 
 config GZLL_TX_STATISTICS
 	bool "Packet transaction statistics"
-	default y
+	default n
 	help
 	  Turns on transmission statistics gathering.
 
