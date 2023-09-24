@@ -25,6 +25,9 @@ uint8_t raw_keymatrix[ROW_COUNT] = {0};
 
 int16_t mouse_x, mouse_y, mouse_v;
 
+const struct device *pmw3360_device = DEVICE_DT_GET_ONE(pixart_pmw3360);
+static struct sensor_trigger pmw3360_trigger;
+
 /* Pipe 0 is used in this example. */
 #define PIPE_NUMBER 0
 
@@ -42,7 +45,7 @@ struct gzll_tx_result
 };
 
 /* Payload to send to Host. */
-static uint8_t data_payload[TX_PAYLOAD_LENGTH];
+static uint8_t data_payload[TX_PAYLOAD_LENGTH] = {0};
 
 /* Placeholder for received ACK payloads from Host. */
 static uint8_t ack_payload[NRF_GZLL_CONST_MAX_PAYLOAD_LENGTH];
@@ -84,7 +87,7 @@ void main(void)
     while (1) {}
   }
 
-  LOG_INF("All ready.");
+  LOG_INF("Peripheral all ready.");
   while (true)
   {
     uint8_t curr_keymatrix[ROW_COUNT] = {0};
@@ -95,15 +98,6 @@ void main(void)
     {
       memcpy(raw_keymatrix, curr_keymatrix, sizeof(curr_keymatrix)); /* Update key matrix data. */
     }
-
-    for (int r = 0; r < ROW_COUNT; r++)
-    {
-      if (raw_keymatrix[r][c] != 0)
-      {
-        LOG_DBG("Key R%d-C%d down", r, c);
-      }
-    }
-    LOG_DBG("------");
 
     /* Gazell. */
     if (k_sem_take(&main_sem, K_FOREVER))
@@ -288,18 +282,8 @@ static void gzll_tx_result_handler(struct gzll_tx_result *tx_result)
   }
 
   /* Load data payload into the TX queue. */
-  // data_payload[0] = (raw_keymatrix[1][1] << 3) + (raw_keymatrix[1][0] << 2) + (raw_keymatrix[2][1] << 1) + (raw_keymatrix[2][0]);
-  // data_payload[0] = (raw_keymatrix[0][0] << 4) + (raw_keymatrix[0][1] << 3) + (raw_keymatrix[0][2] << 2) + (raw_keymatrix[0][3] << 1) + (raw_keymatrix[0][4]);
-  // data_payload[1] = (raw_keymatrix[0][5] << 7) + (raw_keymatrix[0][6] << 6) + (raw_keymatrix[1][0] << 5) + (raw_keymatrix[1][1] << 4) + (raw_keymatrix[1][2] << 3) + (raw_keymatrix[1][3] << 2) + (raw_keymatrix[1][4] << 1) + (raw_keymatrix[1][5]);
-  // data_payload[2] = (raw_keymatrix[1][6] << 7) + (raw_keymatrix[2][0] << 6) + (raw_keymatrix[2][1] << 5) + (raw_keymatrix[2][2] << 4) + (raw_keymatrix[2][3] << 3) + (raw_keymatrix[2][4] << 2) + (raw_keymatrix[2][5] << 1) + (raw_keymatrix[2][6]);
-  // data_payload[3] = (raw_keymatrix[3][0] << 7) + (raw_keymatrix[3][1] << 6) + (raw_keymatrix[3][2] << 5) + (raw_keymatrix[3][3] << 4) + (raw_keymatrix[3][4] << 3) + (raw_keymatrix[3][5] << 2) + (raw_keymatrix[3][6] << 1) + (raw_keymatrix[4][0]);
-  // data_payload[4] = (raw_keymatrix[4][1] << 7) + (raw_keymatrix[4][2] << 6) + (raw_keymatrix[4][3] << 5) + (raw_keymatrix[4][4] << 4) + (raw_keymatrix[4][5] << 3) + (raw_keymatrix[3][5] << 2) + (raw_keymatrix[3][6] << 1) + (raw_keymatrix[4][0]);
+  memcpy(data_payload, raw_keymatrix, ROW_COUNT);
 
-  memcpy(data_payload[0], raw_keymatrix[0], 1); /* Row 0. */
-  memcpy(data_payload[1], raw_keymatrix[1], 1);
-  memcpy(data_payload[2], raw_keymatrix[2], 1);
-  memcpy(data_payload[3], raw_keymatrix[3], 1);
-  memcpy(data_payload[4], raw_keymatrix[4], 1);
   data_payload[5] = mouse_x >> 8;
   data_payload[6] = mouse_x & 0xFF;
   data_payload[7] = mouse_y >> 8;
@@ -396,7 +380,12 @@ uint8_t keymatrix_read_cols(uint8_t row)
   {
     struct gpio_dt_spec col_pin = col_gpios[col];
     int val = gpio_pin_get_dt(&col_pin); /* Read selected colume pin state. */
-    col_state = val << col;
+    col_state += val << col;
+
+    if (val != 0)
+    {
+      LOG_DBG("Key R%d-C%d pressed", row, col);
+    }
   }
 
   gpio_pin_set_dt(&row_pin, 1); /* Unselect row by output HIGH. */
@@ -407,14 +396,15 @@ uint8_t keymatrix_read_cols(uint8_t row)
  * @brief Key matrix scan.
  * @param matrix Key matrix[Row] output.
  */
-void keymatrix_scan(uint8_t matrix[ROW_COUNT])
+void keymatrix_scan(uint8_t *matrix)
 {
   /* For each row. */
   for (uint8_t row = 0; row < ROW_COUNT; row++)
   {
-    uint8_t col_state = keymatrix_read_cols(row);      /* Select a row and read columns. */
-    memcpy(matrix[row], col_state, sizeof(col_state)); /* Copy data. */
+    uint8_t col_state = keymatrix_read_cols(row); /* Select a row and read columns. */
+    matrix[row] = col_state;
   }
+  // LOG_DBG("----------<scan done");
 }
 
 /**
@@ -465,6 +455,11 @@ int pmw3360_read(int16_t *x, int16_t *y)
   if (ret < 0)
   {
     LOG_ERR("PMW3360 could not fetch data, error code: %d", ret);
+    while (1)
+    {
+      /* code */
+    }
+    
     return ret;
   }
 

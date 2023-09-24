@@ -31,9 +31,10 @@ static const struct gpio_dt_spec col1_gpio = GPIO_DT_SPEC_GET_OR(DT_ALIAS(col1),
 static const struct gpio_dt_spec col2_gpio = GPIO_DT_SPEC_GET_OR(DT_ALIAS(col2), gpios, {0});
 static struct gpio_dt_spec col_gpios[COL_COUNT];
 
-uint8_t raw_keymatrix[ROW_COUNT][COL_COUNT] = {0};
+uint8_t raw_keymatrix[ROW_COUNT * 2] = {0};
+uint8_t raw_mouse[6] = {0};
 
-int16_t mouse_x, mouse_y;
+int16_t mouse_x, mouse_y, mouse_v;
 
 const struct device *pmw3360_device = DEVICE_DT_GET_ONE(pixart_pmw3360);
 static struct sensor_trigger pmw3360_trigger;
@@ -83,17 +84,17 @@ void main(void)
   }
 
   // qmk_uart_send_bytes("Hello!\n");
-  LOG_INF("All ready.");
+  LOG_INF("Central all ready.");
+  qmk_uart_send_bytes("QMK UART", 8);
   while (1)
   {
-
     /* Gazell. */
     if (k_sem_take(&main_sem, K_FOREVER))
     {
       continue;
     }
 
-    qmk_uart_send(&raw_keymatrix, mouse_x, mouse_y);
+    qmk_uart_send(raw_keymatrix, raw_mouse);
 
     k_msleep(10);
   }
@@ -132,9 +133,10 @@ void qmk_uart_callback(const struct device *dev, void *user_data)
  */
 void qmk_uart_send_bytes(uint8_t *data, uint16_t len)
 {
-  for (int i = 0; i < len; i++)
+  for (uint16_t i = 0; i < len; i++)
   {
     uart_poll_out(qmk_uart_device, data[i]);
+    // LOG_DBG("QMK UART send: %d", data[i]);
   }
 }
 
@@ -144,31 +146,15 @@ void qmk_uart_send_bytes(uint8_t *data, uint16_t len)
  * @param mouse_x Mouse X axix data.
  * @param mouse_y Mouse Y axix data.
  */
-void qmk_uart_send(uint8_t keymatrix[][COL_COUNT], int16_t mouse_x, int16_t mouse_y)
+void qmk_uart_send(uint8_t *keymatrix, uint8_t *mouse)
 {
-  /*
-   * Send keymatrix data.
-   *
-   * Row-0 Col-0
-   * Row-0 Col-1
-   * Row-0 Col-2
-   * ...
-   * Row-1 Col-0
-   * Row-1 Col-1
-   */
-  for (uint8_t row = 0; row < ROW_COUNT; row++)
-  {
-    qmk_uart_send_bytes(keymatrix[row], COL_COUNT);
-  }
+  qmk_uart_send_bytes(keymatrix, ROW_COUNT * 2);
 
-  /* Send mouse data and EOT. */
-  uint8_t data[5];
-  data[0] = ((uint16_t)mouse_x >> 8);   /* Upper 8 bits of mouse X. */
-  data[1] = ((uint16_t)mouse_x & 0xFF); /* Lower 8 bits of mouse X. */
-  data[2] = ((uint16_t)mouse_y >> 8);   /* Upper 8 bits of mouse Y. */
-  data[3] = ((uint16_t)mouse_y & 0xFF); /* Lower 8 bits of mouse Y. */
-  data[4] = 0x84;                       /* EOT (End of Transmission) character. */
-  qmk_uart_send_bytes(data, 5);
+  qmk_uart_send_bytes(mouse, 6);
+  LOG_DBG("X: 0x%2X%2X. Y:0x%2X%2X",mouse[0], mouse[1], mouse[2],mouse[3]);
+
+  uint8_t end[1] = {EOT};
+  qmk_uart_send_bytes(end, 1);
 }
 
 /**
@@ -278,11 +264,20 @@ void gzll_rx_result_handler(struct gzll_rx_result *rx_result)
   }
   else if (data_payload_length > 0)
   {
-    LOG_DBG("Gazell received%d", data_payload[0]);
+    // LOG_DBG("Gazell received, length: %d", data_payload_length);
+
+    uint8_t offset = 0;
+    if (data_payload[0] & 0x80) /* Left. */
+    {
+      offset = ROW_COUNT;
+    }
+    memcpy(raw_keymatrix + offset, data_payload, ROW_COUNT);
+
+    memcpy(raw_mouse, data_payload + (ROW_COUNT), 6);
   }
 
   /* Send. */
-  ack_payload[0] = (raw_keymatrix[1][1] << 3) + (raw_keymatrix[1][0] << 2) + (raw_keymatrix[2][1] << 1) + (raw_keymatrix[2][0]);
+  ack_payload[0] = ACK;
   result_value = nrf_gzll_add_packet_to_tx_fifo(rx_result->pipe,
                                                 ack_payload,
                                                 TX_PAYLOAD_LENGTH);
