@@ -100,7 +100,7 @@ void main(void)
     bool keymatrix_changed = memcmp(raw_keymatrix, curr_keymatrix, sizeof(curr_keymatrix)) != 0;
     if (keymatrix_changed)
     {
-      memcpy(raw_keymatrix, curr_keymatrix, sizeof(curr_keymatrix));
+      memcpy(raw_keymatrix, curr_keymatrix, sizeof(curr_keymatrix)); /* Update key matrix data. */
     }
 
     for (int r = 0; r < ROW_COUNT; r++)
@@ -178,29 +178,35 @@ bool keymatrix_init(void)
       LOG_ERR("Failed to configure GPIO %s pin %d, return: %d.", gpio.port->name, gpio.pin, ret);
       return false;
     }
+
+    ret = gpio_pin_set_dt(&gpio, 1); /* Unselect row by output HIGH. */
+    if (ret != 0)
+    {
+      LOG_ERR("Failed to set GPIO %s pin %d HIGH, return: %d.", gpio.port->name, gpio.pin, ret);
+      return false;
+    }
   }
 
   LOG_INF("Key matrix ready.");
 
-  return true; /* Successful. */
+  return true; /* Success. */
 }
 
 /**
  * @brief Select a row and read columns. (Diode direction: Col-to-Row)
  * @param row Selected row index.
- * @param col_states Readed column states.
+ * @param col_states Readed column states output.
  */
 void keymatrix_read_cols(uint8_t row, uint8_t col_states[])
 {
   struct gpio_dt_spec row_pin = row_gpios[row];
-
   gpio_pin_set_dt(&row_pin, 0); /* Select row by output LOW. */
 
   /* Read each column. */
   for (uint8_t col_index = 0; col_index < COL_COUNT; col_index++)
   {
     struct gpio_dt_spec col_pin = col_gpios[col_index];
-    int val = gpio_pin_get_dt(&col_pin);
+    int val = gpio_pin_get_dt(&col_pin); /* Read selected colume pin state. */
     col_states[col_index] = val;
   }
 
@@ -209,7 +215,7 @@ void keymatrix_read_cols(uint8_t row, uint8_t col_states[])
 
 /**
  * @brief Key matrix scan.
- * @param matrix Key matrix[Row][Col]
+ * @param matrix Key matrix[Row][Col] output.
  */
 void keymatrix_scan(uint8_t matrix[][COL_COUNT])
 {
@@ -234,21 +240,24 @@ bool qmk_uart_init(void)
     return false;
   }
 
-  uart_irq_callback_user_data_set(qmk_uart_device, qmk_uart_callback, NULL); /* Interrupt. */
+  /* Setup interrupt. */
+  uart_irq_callback_user_data_set(qmk_uart_device, qmk_uart_callback, NULL); /* Callback function. */
   uart_irq_rx_enable(qmk_uart_device);
 
   LOG_INF("QMK UART started.");
 
-  return true;
+  return true; /* Success. */
 }
 
 void qmk_uart_callback(const struct device *dev, void *user_data)
 {
+  /* Do nothing. */
 }
 
 /**
- * @brief Send data bytes.
- * @param data
+ * @brief Send data bytes to QMK.
+ * @param data Data packets.
+ * @param len  Data packets length.
  */
 void qmk_uart_send_bytes(uint8_t *data, uint16_t len)
 {
@@ -315,6 +324,14 @@ bool gzll_init(void)
     return false;
   }
 
+  ack_payload[0] = 0x00;
+  ret = nrf_gzll_add_packet_to_tx_fifo(PIPE_NUMBER, ack_payload, TX_PAYLOAD_LENGTH);
+  if (!ret)
+  {
+    LOG_ERR("Cannot add packet to Gazell TX FIFO");
+    return;
+  }
+
   ret = nrf_gzll_enable();
   if (!ret)
   {
@@ -324,7 +341,7 @@ bool gzll_init(void)
 
   LOG_INF("Gazell host started.");
 
-  return true; /* Succesful. */
+  return true; /* Success. */
 }
 
 void nrf_gzll_device_tx_success(uint32_t pipe, nrf_gzll_device_tx_info_t tx_info)
@@ -390,10 +407,10 @@ void gzll_rx_result_handler(struct gzll_rx_result *rx_result)
   }
   else if (data_payload_length > 0)
   {
-    // Do something.
+    LOG_DBG("Gazell received%d", data_payload[0]);
   }
 
-  /* Read buttons and load ACK payload into TX queue. */
+  /* Send. */
   ack_payload[0] = (raw_keymatrix[1][1] << 3) + (raw_keymatrix[1][0] << 2) + (raw_keymatrix[2][1] << 1) + (raw_keymatrix[2][0]);
   result_value = nrf_gzll_add_packet_to_tx_fifo(rx_result->pipe,
                                                 ack_payload,
@@ -433,7 +450,7 @@ bool pmw3360_init(void)
 
   LOG_INF("PMW3360 started.");
 
-  return true;
+  return true; /* Success. */
 }
 
 /**
@@ -447,6 +464,7 @@ int pmw3360_read(int16_t *x, int16_t *y)
   struct sensor_value sensor_x, sensor_y;
   int ret;
 
+  /* Fetch all sensor channels. */
   ret = sensor_sample_fetch_chan(pmw3360_device, SENSOR_CHAN_ALL);
   if (ret < 0)
   {
@@ -454,6 +472,7 @@ int pmw3360_read(int16_t *x, int16_t *y)
     return ret;
   }
 
+  /* Get X axis data. */
   ret = sensor_channel_get(pmw3360_device, SENSOR_CHAN_POS_DX, &sensor_x);
   if (ret < 0)
   {
@@ -461,6 +480,7 @@ int pmw3360_read(int16_t *x, int16_t *y)
     return ret;
   }
 
+  /* Get Y axis data. */
   ret = sensor_channel_get(pmw3360_device, SENSOR_CHAN_POS_DY, &sensor_y);
   if (ret < 0)
   {
