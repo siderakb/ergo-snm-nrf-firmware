@@ -5,6 +5,10 @@
 		},
 		{
 			"path": "peripheral"
+		},
+		{
+			"path": "./",
+			"name": "root"
 		}
 	],
 	"settings": {
