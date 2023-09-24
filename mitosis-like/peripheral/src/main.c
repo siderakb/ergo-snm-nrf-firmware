@@ -21,7 +21,7 @@ static const struct gpio_dt_spec col1_gpio = GPIO_DT_SPEC_GET_OR(DT_ALIAS(col1),
 static const struct gpio_dt_spec col2_gpio = GPIO_DT_SPEC_GET_OR(DT_ALIAS(col2), gpios, {0});
 static struct gpio_dt_spec col_gpios[COL_COUNT];
 
-uint8_t raw_keymatrix[ROW_COUNT][COL_COUNT] = {0};
+uint8_t raw_keymatrix[ROW_COUNT] = {0};
 
 int16_t mouse_x, mouse_y, mouse_v;
 
@@ -87,7 +87,7 @@ void main(void)
   LOG_INF("All ready.");
   while (true)
   {
-    uint8_t curr_keymatrix[ROW_COUNT][COL_COUNT] = {0};
+    uint8_t curr_keymatrix[ROW_COUNT] = {0};
     keymatrix_scan(curr_keymatrix);
 
     bool keymatrix_changed = memcmp(raw_keymatrix, curr_keymatrix, sizeof(curr_keymatrix)) != 0;
@@ -98,12 +98,9 @@ void main(void)
 
     for (int r = 0; r < ROW_COUNT; r++)
     {
-      for (int c = 0; c < COL_COUNT; c++)
+      if (raw_keymatrix[r][c] != 0)
       {
-        if (raw_keymatrix[r][c] != 0)
-        {
-          LOG_DBG("Key R%d-C%d down", r, c);
-        }
+        LOG_DBG("Key R%d-C%d down", r, c);
       }
     }
     LOG_DBG("------");
@@ -298,7 +295,7 @@ static void gzll_tx_result_handler(struct gzll_tx_result *tx_result)
   // data_payload[3] = (raw_keymatrix[3][0] << 7) + (raw_keymatrix[3][1] << 6) + (raw_keymatrix[3][2] << 5) + (raw_keymatrix[3][3] << 4) + (raw_keymatrix[3][4] << 3) + (raw_keymatrix[3][5] << 2) + (raw_keymatrix[3][6] << 1) + (raw_keymatrix[4][0]);
   // data_payload[4] = (raw_keymatrix[4][1] << 7) + (raw_keymatrix[4][2] << 6) + (raw_keymatrix[4][3] << 5) + (raw_keymatrix[4][4] << 4) + (raw_keymatrix[4][5] << 3) + (raw_keymatrix[3][5] << 2) + (raw_keymatrix[3][6] << 1) + (raw_keymatrix[4][0]);
 
-  memcpy(data_payload[0], raw_keymatrix[0], 1);
+  memcpy(data_payload[0], raw_keymatrix[0], 1); /* Row 0. */
   memcpy(data_payload[1], raw_keymatrix[1], 1);
   memcpy(data_payload[2], raw_keymatrix[2], 1);
   memcpy(data_payload[3], raw_keymatrix[3], 1);
@@ -311,6 +308,7 @@ static void gzll_tx_result_handler(struct gzll_tx_result *tx_result)
   data_payload[10] = mouse_v & 0xFF;
   data_payload[11] = EOT;
 
+  /* Send. */
   result_value = nrf_gzll_add_packet_to_tx_fifo(tx_result->pipe,
                                                 data_payload,
                                                 TX_PAYLOAD_LENGTH);
@@ -386,36 +384,36 @@ bool keymatrix_init(void)
 /**
  * @brief Select a row and read columns. (Diode direction: Col-to-Row)
  * @param row Selected row index.
- * @param col_states Readed column states output.
  */
-void keymatrix_read_cols(uint8_t row, uint8_t col_states[])
+uint8_t keymatrix_read_cols(uint8_t row)
 {
+  uint8_t col_state = 0;
   struct gpio_dt_spec row_pin = row_gpios[row];
   gpio_pin_set_dt(&row_pin, 0); /* Select row by output LOW. */
 
   /* Read each column. */
-  for (uint8_t col_index = 0; col_index < COL_COUNT; col_index++)
+  for (uint8_t col = 0; col < COL_COUNT; col++)
   {
-    struct gpio_dt_spec col_pin = col_gpios[col_index];
+    struct gpio_dt_spec col_pin = col_gpios[col];
     int val = gpio_pin_get_dt(&col_pin); /* Read selected colume pin state. */
-    col_states[col_index] = val;
+    col_state = val << col;
   }
 
   gpio_pin_set_dt(&row_pin, 1); /* Unselect row by output HIGH. */
+  return col_state;
 }
 
 /**
  * @brief Key matrix scan.
- * @param matrix Key matrix[Row][Col] output.
+ * @param matrix Key matrix[Row] output.
  */
-void keymatrix_scan(uint8_t matrix[][COL_COUNT])
+void keymatrix_scan(uint8_t matrix[ROW_COUNT])
 {
   /* For each row. */
-  for (uint8_t row_index = 0; row_index < ROW_COUNT; row_index++)
+  for (uint8_t row = 0; row < ROW_COUNT; row++)
   {
-    uint8_t col_states[COL_COUNT] = {0};
-    keymatrix_read_cols(row_index, col_states);                /* Select a row and read columns. */
-    memcpy(matrix[row_index], col_states, sizeof(col_states)); /* Copy data. */
+    uint8_t col_state = keymatrix_read_cols(row);      /* Select a row and read columns. */
+    memcpy(matrix[row], col_state, sizeof(col_state)); /* Copy data. */
   }
 }
 

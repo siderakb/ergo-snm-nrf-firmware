@@ -34,8 +34,8 @@ void qmk_uart_send_bytes(uint8_t *buf, uint16_t len);
 void qmk_uart_send(uint8_t keymatrix[][COL_COUNT], int16_t mouse_x, int16_t mouse_y);
 
 bool keymatrix_init(void);
-void keymatrix_read_cols(uint8_t row, uint8_t col_states[]);
-void keymatrix_scan(uint8_t matrix[][COL_COUNT]);
+uint8_t void keymatrix_read_cols(uint8_t row);
+void keymatrix_scan(uint8_t matrix[ROW_COUNT]);
 
 bool gzll_init(void);
 void gzll_work_callback(struct k_work *work);
