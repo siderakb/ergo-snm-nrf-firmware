@@ -17,27 +17,9 @@ K_MSGQ_DEFINE(uart_msgq, MSG_SIZE, 10, 4);
 
 /* receive buffer used in UART ISR callback */
 static char rx_buf[MSG_SIZE];
-static int rx_buf_pos;
-
-/* Key matrix GPIO. */
-static const struct gpio_dt_spec row0_gpio = GPIO_DT_SPEC_GET_OR(DT_ALIAS(row0), gpios, {0});
-static const struct gpio_dt_spec row1_gpio = GPIO_DT_SPEC_GET_OR(DT_ALIAS(row1), gpios, {0});
-static const struct gpio_dt_spec row2_gpio = GPIO_DT_SPEC_GET_OR(DT_ALIAS(row2), gpios, {0});
-static const struct gpio_dt_spec row3_gpio = GPIO_DT_SPEC_GET_OR(DT_ALIAS(row3), gpios, {0});
-static struct gpio_dt_spec row_gpios[ROW_COUNT];
-
-static const struct gpio_dt_spec col0_gpio = GPIO_DT_SPEC_GET_OR(DT_ALIAS(col0), gpios, {0});
-static const struct gpio_dt_spec col1_gpio = GPIO_DT_SPEC_GET_OR(DT_ALIAS(col1), gpios, {0});
-static const struct gpio_dt_spec col2_gpio = GPIO_DT_SPEC_GET_OR(DT_ALIAS(col2), gpios, {0});
-static struct gpio_dt_spec col_gpios[COL_COUNT];
 
 uint8_t raw_keymatrix[ROW_COUNT * 2] = {0};
 uint8_t raw_mouse[6] = {0};
-
-int16_t mouse_x, mouse_y, mouse_v;
-
-const struct device *pmw3360_device = DEVICE_DT_GET_ONE(pixart_pmw3360);
-static struct sensor_trigger pmw3360_trigger;
 
 LOG_MODULE_REGISTER(app, LOG_LEVEL_DBG);
 
@@ -83,9 +65,8 @@ void main(void)
     while (1) {}
   }
 
-  // qmk_uart_send_bytes("Hello!\n");
   LOG_INF("Central all ready.");
-  qmk_uart_send_bytes("QMK UART", 8);
+  qmk_uart_send_bytes("QMK UART Ready\r\n", 18);
   while (1)
   {
     /* Gazell. */
@@ -151,7 +132,7 @@ void qmk_uart_send(uint8_t *keymatrix, uint8_t *mouse)
   qmk_uart_send_bytes(keymatrix, ROW_COUNT * 2);
 
   qmk_uart_send_bytes(mouse, 6);
-  LOG_DBG("X: 0x%2X%2X. Y:0x%2X%2X",mouse[0], mouse[1], mouse[2],mouse[3]);
+  LOG_DBG("X: 0x%02X%02X. Y:0x%2X%2X", mouse[0], mouse[1], mouse[2], mouse[3]);
 
   uint8_t end[1] = {EOT};
   qmk_uart_send_bytes(end, 1);
@@ -251,29 +232,29 @@ void gzll_work_callback(struct k_work *work)
 
 void gzll_rx_result_handler(struct gzll_rx_result *rx_result)
 {
-  int err;
   uint32_t data_payload_length = NRF_GZLL_CONST_MAX_PAYLOAD_LENGTH;
 
   /* Pop packet and write first byte of the payload to the GPIO port. */
   bool result_value = nrf_gzll_fetch_packet_from_rx_fifo(rx_result->pipe,
                                                          data_payload,
                                                          &data_payload_length);
+
   if (!result_value)
   {
     LOG_ERR("Gazell RX fifo error");
   }
   else if (data_payload_length > 0)
   {
-    // LOG_DBG("Gazell received, length: %d", data_payload_length);
+    LOG_DBG("Gazell received, length: %d", data_payload_length);
 
     uint8_t offset = 0;
-    if (data_payload[0] & 0x80) /* Left. */
+    if (data_payload_length == (ROW_COUNT + 6 + 1)) /* Right. */
     {
       offset = ROW_COUNT;
+      memcpy(raw_mouse, data_payload + ROW_COUNT, 6);
     }
-    memcpy(raw_keymatrix + offset, data_payload, ROW_COUNT);
 
-    memcpy(raw_mouse, data_payload + (ROW_COUNT), 6);
+    memcpy(raw_keymatrix + offset, data_payload, ROW_COUNT);
   }
 
   /* Send. */
