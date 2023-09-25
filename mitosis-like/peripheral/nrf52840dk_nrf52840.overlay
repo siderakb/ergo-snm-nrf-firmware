@@ -86,3 +86,19 @@
     label = "pmw3360";
   };
 };
+
+&i2c0 {
+	status = "disabled";
+};
+
+&qspi {
+	status = "disabled";
+};
+
+&pwm0 {
+	status = "disabled";
+};
+
+&spi3 {
+	status = "disabled";
+};

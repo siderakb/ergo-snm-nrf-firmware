@@ -7,6 +7,8 @@
 
 #include "main.h"
 
+#define PMW3360_ENABLE
+
 LOG_MODULE_REGISTER(app, LOG_LEVEL_DBG);
 
 /* Key matrix GPIO. */
@@ -23,15 +25,19 @@ static struct gpio_dt_spec col_gpios[COL_COUNT];
 
 uint8_t raw_keymatrix[ROW_COUNT] = {0};
 
-int16_t mouse_x, mouse_y, mouse_v;
+int16_t mouse_x, mouse_y, mouse_v = 0;
 
 const struct device *pmw3360_device = DEVICE_DT_GET_ONE(pixart_pmw3360);
-static struct sensor_trigger pmw3360_trigger;
+// static struct sensor_trigger pmw3360_trigger;
 
 /* Pipe 0 is used in this example. */
 #define PIPE_NUMBER 0
 
-#define TX_PAYLOAD_LENGTH 12
+#ifdef PMW3360_ENABLE
+  #define TX_PAYLOAD_LENGTH (ROW_COUNT + 6 + 1)
+#else
+  #define TX_PAYLOAD_LENGTH (ROW_COUNT + 1)
+#endif
 
 /* Maximum number of transmission attempts */
 #define MAX_TX_ATTEMPTS 100
@@ -82,10 +88,12 @@ void main(void)
     while (1) {}
   }
 
+#ifdef PMW3360_ENABLE
   if (!pmw3360_init())
   {
     while (1) {}
   }
+#endif
 
   LOG_INF("Peripheral all ready.");
   while (true)
@@ -99,13 +107,16 @@ void main(void)
       memcpy(raw_keymatrix, curr_keymatrix, sizeof(curr_keymatrix)); /* Update key matrix data. */
     }
 
+#ifdef PMW3360_ENABLE
+    pmw3360_read(&mouse_x, &mouse_y);
+    LOG_DBG("PMW3360 report X: %5d, Y: %5d", (int)mouse_x, (int)mouse_y);
+#endif
+
     /* Gazell. */
     if (k_sem_take(&main_sem, K_FOREVER))
     {
       continue;
     }
-
-    pmw3360_read(&mouse_x, &mouse_y);
 
 #ifdef CONFIG_GZLL_TX_STATISTICS
     if (statistics.packets_num >= 1000)
@@ -284,13 +295,17 @@ static void gzll_tx_result_handler(struct gzll_tx_result *tx_result)
   /* Load data payload into the TX queue. */
   memcpy(data_payload, raw_keymatrix, ROW_COUNT);
 
-  data_payload[5] = mouse_x >> 8;
-  data_payload[6] = mouse_x & 0xFF;
-  data_payload[7] = mouse_y >> 8;
-  data_payload[8] = mouse_y & 0xFF;
-  data_payload[9] = mouse_v >> 8;
-  data_payload[10] = mouse_v & 0xFF;
-  data_payload[11] = EOT;
+#ifdef PMW3360_ENABLE
+  data_payload[ROW_COUNT] = mouse_x >> 8;
+  data_payload[ROW_COUNT + 1] = mouse_x & 0xFF;
+  data_payload[ROW_COUNT + 2] = mouse_y >> 8;
+  data_payload[ROW_COUNT + 3] = mouse_y & 0xFF;
+  data_payload[ROW_COUNT + 4] = mouse_v >> 8;
+  data_payload[ROW_COUNT + 5] = mouse_v & 0xFF;
+  data_payload[ROW_COUNT + 6] = EOT;
+#else
+  data_payload[ROW_COUNT] = EOT;
+#endif
 
   /* Send. */
   result_value = nrf_gzll_add_packet_to_tx_fifo(tx_result->pipe,
@@ -434,6 +449,7 @@ bool pmw3360_init(void)
   }
 #endif
 
+  k_msleep(100);
   LOG_INF("PMW3360 started.");
 
   return true; /* Success. */
@@ -459,7 +475,7 @@ int pmw3360_read(int16_t *x, int16_t *y)
     {
       /* code */
     }
-    
+
     return ret;
   }
 
@@ -483,7 +499,7 @@ int pmw3360_read(int16_t *x, int16_t *y)
   *x = (int16_t)sensor_value_to_double(&sensor_x);
   *y = (int16_t)sensor_value_to_double(&sensor_y);
 
-  LOG_DBG("PMW3360 report X: %5d, Y: %5d", (int)*x, (int)*y);
+  // LOG_DBG("PMW3360 report X: %5d, Y: %5d", (int)*x, (int)*y);
 
   return 0; /* Success. */
 }

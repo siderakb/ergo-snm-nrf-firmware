@@ -11,7 +11,7 @@
 #include <zephyr/device.h>
 #include <zephyr/drivers/gpio.h>
 #include <zephyr/drivers/uart.h>
-#include <zephyr/drivers/sensor.h> /* PMW3360. */
+// #include <zephyr/drivers/sensor.h> /* PMW3360. */
 #include <zephyr/sys/util.h>
 #include <zephyr/sys/printk.h>
 #include <zephyr/logging/log.h>
@@ -35,7 +35,3 @@ void qmk_uart_send(uint8_t *keymatrix, uint8_t *mouse);
 
 bool gzll_init(void);
 void gzll_work_callback(struct k_work *work);
-
-bool pmw3360_init(void);
-int pmw3360_read(int16_t *x, int16_t *y);
-void pmw3360_callback(const struct device *dev, const struct sensor_trigger *trig);
