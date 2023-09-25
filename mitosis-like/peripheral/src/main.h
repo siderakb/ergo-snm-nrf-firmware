@@ -1,7 +1,7 @@
 /**
  * @file  main.h
- * @brief
- * @author ZiTe (honmonoh@gmail.com)
+ * @brief ErgoSNM keyboard wireless mitosis-like edition firmware, peripheral.
+ * @author SideraKB / ZiTe (honmonoh@gmail.com)
  * @note SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
  */
 
@@ -21,17 +21,6 @@
 #include <inttypes.h>
 #include <string.h>
 #include <stdio.h>
-
-/* Key matrix size. */
-#define ROW_COUNT 4
-#define COL_COUNT 3
-
-#define EOT (0xFE)
-
-bool qmk_uart_init(void);
-void qmk_uart_callback(const struct device *dev, void *user_data);
-void qmk_uart_send_bytes(uint8_t *buf, uint16_t len);
-void qmk_uart_send(uint8_t keymatrix[][COL_COUNT], int16_t mouse_x, int16_t mouse_y);
 
 bool keymatrix_init(void);
 uint8_t keymatrix_read_cols(uint8_t row);
