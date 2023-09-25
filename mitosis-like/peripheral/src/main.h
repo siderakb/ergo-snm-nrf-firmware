@@ -23,8 +23,8 @@
 #include <stdio.h>
 
 /* Key matrix size. */
-#define ROW_COUNT 4
-#define COL_COUNT 3
+#define ROW_COUNT 5
+#define COL_COUNT 8
 
 #define EOT (0xFE)
 

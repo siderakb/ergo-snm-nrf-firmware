@@ -16,11 +16,17 @@ static const struct gpio_dt_spec row0_gpio = GPIO_DT_SPEC_GET_OR(DT_ALIAS(row0),
 static const struct gpio_dt_spec row1_gpio = GPIO_DT_SPEC_GET_OR(DT_ALIAS(row1), gpios, {0});
 static const struct gpio_dt_spec row2_gpio = GPIO_DT_SPEC_GET_OR(DT_ALIAS(row2), gpios, {0});
 static const struct gpio_dt_spec row3_gpio = GPIO_DT_SPEC_GET_OR(DT_ALIAS(row3), gpios, {0});
+static const struct gpio_dt_spec row4_gpio = GPIO_DT_SPEC_GET_OR(DT_ALIAS(row4), gpios, {0});
 static struct gpio_dt_spec row_gpios[ROW_COUNT];
 
 static const struct gpio_dt_spec col0_gpio = GPIO_DT_SPEC_GET_OR(DT_ALIAS(col0), gpios, {0});
 static const struct gpio_dt_spec col1_gpio = GPIO_DT_SPEC_GET_OR(DT_ALIAS(col1), gpios, {0});
 static const struct gpio_dt_spec col2_gpio = GPIO_DT_SPEC_GET_OR(DT_ALIAS(col2), gpios, {0});
+static const struct gpio_dt_spec col3_gpio = GPIO_DT_SPEC_GET_OR(DT_ALIAS(col3), gpios, {0});
+static const struct gpio_dt_spec col4_gpio = GPIO_DT_SPEC_GET_OR(DT_ALIAS(col4), gpios, {0});
+static const struct gpio_dt_spec col5_gpio = GPIO_DT_SPEC_GET_OR(DT_ALIAS(col5), gpios, {0});
+static const struct gpio_dt_spec col6_gpio = GPIO_DT_SPEC_GET_OR(DT_ALIAS(col6), gpios, {0});
+static const struct gpio_dt_spec col7_gpio = GPIO_DT_SPEC_GET_OR(DT_ALIAS(col7), gpios, {0});
 static struct gpio_dt_spec col_gpios[COL_COUNT];
 
 uint8_t raw_keymatrix[ROW_COUNT] = {0};
@@ -326,6 +332,11 @@ bool keymatrix_init(void)
   col_gpios[0] = col0_gpio;
   col_gpios[1] = col1_gpio;
   col_gpios[2] = col2_gpio;
+  col_gpios[3] = col3_gpio;
+  col_gpios[4] = col4_gpio;
+  col_gpios[5] = col5_gpio;
+  col_gpios[6] = col6_gpio;
+  col_gpios[7] = col7_gpio;
 
   for (uint8_t i = 0; i < COL_COUNT; i++)
   {
@@ -349,6 +360,7 @@ bool keymatrix_init(void)
   row_gpios[1] = row1_gpio;
   row_gpios[2] = row2_gpio;
   row_gpios[3] = row3_gpio;
+  row_gpios[4] = row4_gpio;
 
   for (uint8_t i = 0; i < ROW_COUNT; i++)
   {
