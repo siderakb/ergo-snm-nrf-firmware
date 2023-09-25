@@ -449,6 +449,7 @@ bool pmw3360_init(void)
   }
 #endif
 
+  k_msleep(100);
   LOG_INF("PMW3360 started.");
 
   return true; /* Success. */

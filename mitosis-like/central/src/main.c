@@ -245,22 +245,22 @@ void gzll_rx_result_handler(struct gzll_rx_result *rx_result)
   }
   else if (data_payload_length > 0)
   {
-    LOG_DBG("Gazell received, length: %d", data_payload_length);
+    // LOG_DBG("Gazell received, length: %d", data_payload_length);
 
     uint8_t offset = 0;
     if (data_payload_length == (ROW_COUNT + 6 + 1)) /* Right. */
     {
       offset = ROW_COUNT;
       memcpy(raw_mouse, data_payload + ROW_COUNT, 6);
-      // LOG_DBG("L: %d, x: 0x%02X%02X, y: 0x%02X%02X, v: 0x%02X%02X, E: 0x%02X",
-      //         data_payload_length,
-      //         data_payload[ROW_COUNT],
-      //         data_payload[ROW_COUNT + 1],
-      //         data_payload[ROW_COUNT + 2],
-      //         data_payload[ROW_COUNT + 3],
-      //         data_payload[ROW_COUNT + 4],
-      //         data_payload[ROW_COUNT + 5],
-      //         data_payload[ROW_COUNT + 6]);
+      LOG_DBG("L: %d, x: 0x%02X%02X, y: 0x%02X%02X, v: 0x%02X%02X, E: 0x%02X",
+              data_payload_length,
+              data_payload[ROW_COUNT],
+              data_payload[ROW_COUNT + 1],
+              data_payload[ROW_COUNT + 2],
+              data_payload[ROW_COUNT + 3],
+              data_payload[ROW_COUNT + 4],
+              data_payload[ROW_COUNT + 5],
+              data_payload[ROW_COUNT + 6]);
     }
 
     memcpy(raw_keymatrix + offset, data_payload, ROW_COUNT);
