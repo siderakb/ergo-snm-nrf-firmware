@@ -132,7 +132,7 @@ void qmk_uart_send(uint8_t *keymatrix, uint8_t *mouse)
   qmk_uart_send_bytes(keymatrix, ROW_COUNT * 2);
 
   qmk_uart_send_bytes(mouse, 6);
-  LOG_DBG("X: 0x%02X%02X. Y:0x%2X%2X", mouse[0], mouse[1], mouse[2], mouse[3]);
+  // LOG_DBG("X: 0x%02X%02X. Y:0x%2X%2X", mouse[0], mouse[1], mouse[2], mouse[3]);
 
   uint8_t end[1] = {EOT};
   qmk_uart_send_bytes(end, 1);
@@ -252,6 +252,15 @@ void gzll_rx_result_handler(struct gzll_rx_result *rx_result)
     {
       offset = ROW_COUNT;
       memcpy(raw_mouse, data_payload + ROW_COUNT, 6);
+      // LOG_DBG("L: %d, x: 0x%02X%02X, y: 0x%02X%02X, v: 0x%02X%02X, E: 0x%02X",
+      //         data_payload_length,
+      //         data_payload[ROW_COUNT],
+      //         data_payload[ROW_COUNT + 1],
+      //         data_payload[ROW_COUNT + 2],
+      //         data_payload[ROW_COUNT + 3],
+      //         data_payload[ROW_COUNT + 4],
+      //         data_payload[ROW_COUNT + 5],
+      //         data_payload[ROW_COUNT + 6]);
     }
 
     memcpy(raw_keymatrix + offset, data_payload, ROW_COUNT);
