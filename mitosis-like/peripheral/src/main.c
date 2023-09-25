@@ -1,13 +1,28 @@
 /**
  * @file  main.c
- * @brief
- * @author ZiTe (honmonoh@gmail.com)
+ * @brief ErgoSNM keyboard wireless mitosis-like edition firmware, peripheral.
+ * @author SideraKB / ZiTe (honmonoh@gmail.com)
  * @note SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
  */
 
 #include "main.h"
 
-#define PMW3360_ENABLE
+#define PMW3360_ENABLE /* Comment out to disable PMW3360. */
+
+/* Key matrix size. */
+#define ROW_COUNT (5)
+#define COL_COUNT (8)
+
+#define PIPE_NUMBER (0)       /* Gazell pipe. */
+#define MAX_TX_ATTEMPTS (100) /* Maximum number of transmission attempts */
+
+#ifdef PMW3360_ENABLE
+  #define TX_PAYLOAD_LENGTH (ROW_COUNT + 6 + 1)
+#else
+  #define TX_PAYLOAD_LENGTH (ROW_COUNT + 1)
+#endif
+
+#define EOT (0xFE)
 
 LOG_MODULE_REGISTER(app, LOG_LEVEL_DBG);
 
@@ -31,22 +46,12 @@ static struct gpio_dt_spec col_gpios[COL_COUNT];
 
 uint8_t raw_keymatrix[ROW_COUNT] = {0};
 
-int16_t mouse_x, mouse_y, mouse_v = 0;
+int16_t mouse_x = 0;
+int16_t mouse_y = 0;
+int16_t mouse_v = 0;
 
 const struct device *pmw3360_device = DEVICE_DT_GET_ONE(pixart_pmw3360);
 // static struct sensor_trigger pmw3360_trigger;
-
-/* Pipe 0 is used in this example. */
-#define PIPE_NUMBER 0
-
-#ifdef PMW3360_ENABLE
-  #define TX_PAYLOAD_LENGTH (ROW_COUNT + 6 + 1)
-#else
-  #define TX_PAYLOAD_LENGTH (ROW_COUNT + 1)
-#endif
-
-/* Maximum number of transmission attempts */
-#define MAX_TX_ATTEMPTS 100
 
 /* Gazell Link Layer TX result structure */
 struct gzll_tx_result
@@ -395,6 +400,7 @@ bool keymatrix_init(void)
 /**
  * @brief Select a row and read columns. (Diode direction: Col-to-Row)
  * @param row Selected row index.
+ * @return column pin status.
  */
 uint8_t keymatrix_read_cols(uint8_t row)
 {

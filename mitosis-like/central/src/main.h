@@ -1,7 +1,7 @@
 /**
  * @file  main.h
- * @brief
- * @author ZiTe (honmonoh@gmail.com)
+ * @brief ErgoSNM keyboard wireless mitosis-like edition firmware, central.
+ * @author SideraKB / ZiTe (honmonoh@gmail.com)
  * @note SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
  */
 
@@ -20,13 +20,6 @@
 #include <inttypes.h>
 #include <string.h>
 #include <stdio.h>
-
-/* Key matrix size. */
-#define ROW_COUNT 4
-#define COL_COUNT 3
-
-#define EOT (0xFE)
-#define ACK (0xF6)
 
 bool qmk_uart_init(void);
 void qmk_uart_callback(const struct device *dev, void *user_data);

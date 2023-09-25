@@ -1,16 +1,25 @@
 /**
  * @file  main.c
- * @brief
- * @author ZiTe (honmonoh@gmail.com)
+ * @brief ErgoSNM keyboard wireless mitosis-like edition firmware, central.
+ * @author SideraKB / ZiTe (honmonoh@gmail.com)
  * @note SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
  */
 
 #include "main.h"
 
+/* Key matrix size. */
+#define ROW_COUNT (5)
+#define COL_COUNT (8)
+
+#define PIPE_NUMBER (0) /* Gazell pipe. */
+#define TX_PAYLOAD_LENGTH (1)
+#define MSG_SIZE (32)
+
+#define EOT (0xFE)
+#define ACK (0xF6)
+
 /* UART. */
 static const struct device *qmk_uart_device = DEVICE_DT_GET(DT_NODELABEL(uart1));
-
-#define MSG_SIZE 32
 
 /* queue to store up to 10 messages (aligned to 4-byte boundary) */
 K_MSGQ_DEFINE(uart_msgq, MSG_SIZE, 10, 4);
@@ -22,11 +31,6 @@ uint8_t raw_keymatrix[ROW_COUNT * 2] = {0};
 uint8_t raw_mouse[6] = {0};
 
 LOG_MODULE_REGISTER(app, LOG_LEVEL_DBG);
-
-/* Pipe 0 is used in this example. */
-#define PIPE_NUMBER 0
-
-#define TX_PAYLOAD_LENGTH 1
 
 /* Gazell Link Layer RX result structure */
 struct gzll_rx_result
@@ -123,9 +127,8 @@ void qmk_uart_send_bytes(uint8_t *data, uint16_t len)
 
 /**
  * @brief Send keymatrix and mouse data to QMK.
- * @param keymatrix Keymatrix[Row][Col].
- * @param mouse_x Mouse X axix data.
- * @param mouse_y Mouse Y axix data.
+ * @param keymatrix Keymatrix[Row].
+ * @param mouse mouse data.
  */
 void qmk_uart_send(uint8_t *keymatrix, uint8_t *mouse)
 {
