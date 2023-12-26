@@ -7,7 +7,7 @@
 
 #include "main.h"
 
-#define PMW3360_ENABLE /* Comment out to disable PMW3360. */
+// #define PMW3360_ENABLE /* Comment out to disable PMW3360. */
 
 /* Key matrix size. */
 #define ROW_COUNT (5)
@@ -120,7 +120,7 @@ void main(void)
 
 #ifdef PMW3360_ENABLE
     pmw3360_read(&mouse_x, &mouse_y);
-    LOG_DBG("PMW3360 report X: %5d, Y: %5d", (int)mouse_x, (int)mouse_y);
+    // LOG_DBG("PMW3360 report X: %5d, Y: %5d", (int)mouse_x, (int)mouse_y);
 #endif
 
     /* Gazell. */
