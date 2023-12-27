@@ -7,7 +7,7 @@
 
 #include "main.h"
 
-#define PMW3360_ENABLE /* Comment out to disable PMW3360. */
+// #define PMW3360_ENABLE /* Comment out to disable PMW3360. */
 
 /* Key matrix size. */
 #define ROW_COUNT (5)

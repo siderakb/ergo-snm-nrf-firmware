@@ -250,7 +250,7 @@ void gzll_rx_result_handler(struct gzll_rx_result *rx_result)
   {
     // LOG_DBG("Gazell received, length: %d", data_payload_length);
 
-    uint8_t offset = 0;
+    uint8_t offset;
     if (data_payload_length == (ROW_COUNT + 6 + 1)) /* Right. */
     {
       offset = ROW_COUNT;
@@ -264,6 +264,15 @@ void gzll_rx_result_handler(struct gzll_rx_result *rx_result)
               data_payload[ROW_COUNT + 4],
               data_payload[ROW_COUNT + 5],
               data_payload[ROW_COUNT + 6]);
+    }
+    else if (data_payload_length == (ROW_COUNT + 1)) /* Left. */
+    {
+      offset = 0;
+      LOG_DBG("Left");
+    }
+    else
+    {
+      LOG_DBG("Received other.");
     }
 
     memcpy(raw_keymatrix + offset, data_payload, ROW_COUNT);
