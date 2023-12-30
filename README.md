@@ -1,3 +1,6 @@
 # ErgoSNM nRF Firmware
 
-[ErgoSNM keyboard](https://github.com/siderakb/ergo-snm-keyboard) wireless edition firmware, based on nRF52840 MCU and [NCS](https://www.nordicsemi.com/Products/Development-software/nrf-connect-sdk).
+[ErgoSNM Rev 3.x keyboard](https://github.com/siderakb/ergo-snm-keyboard) wireless edition nRF firmware, based on nRF52840 SoC and [NCS](https://www.nordicsemi.com/Products/Development-software/nrf-connect-sdk).
+
+- [`mitosis-like/`](/mitosis-like/): Main firmware
+- [`three-mod/`](/three-mod/): Experimental firmware
