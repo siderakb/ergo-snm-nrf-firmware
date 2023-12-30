@@ -7,7 +7,7 @@
 
 #include "main.h"
 
-// #define PMW3360_ENABLE /* Comment out to disable PMW3360. */
+#define PMW3360_ENABLE /* Comment out to disable PMW3360. */
 
 /* Key matrix size. */
 #define ROW_COUNT (5)
@@ -307,12 +307,12 @@ static void gzll_tx_result_handler(struct gzll_tx_result *tx_result)
   memcpy(data_payload, raw_keymatrix, ROW_COUNT);
 
 #ifdef PMW3360_ENABLE
-  data_payload[ROW_COUNT] = mouse_x >> 8;
-  data_payload[ROW_COUNT + 1] = mouse_x & 0xFF;
-  data_payload[ROW_COUNT + 2] = mouse_y >> 8;
-  data_payload[ROW_COUNT + 3] = mouse_y & 0xFF;
-  data_payload[ROW_COUNT + 4] = mouse_v >> 8;
-  data_payload[ROW_COUNT + 5] = mouse_v & 0xFF;
+  data_payload[ROW_COUNT] = mouse_x >> 8;       // Mouse-X High
+  data_payload[ROW_COUNT + 1] = mouse_x & 0xFF; // Mouse-X Low
+  data_payload[ROW_COUNT + 2] = mouse_y >> 8;   // Mouse-Y High
+  data_payload[ROW_COUNT + 3] = mouse_y & 0xFF; // Mouse-Y Low
+  data_payload[ROW_COUNT + 4] = mouse_v >> 8;   // Mouse-V High
+  data_payload[ROW_COUNT + 5] = mouse_v & 0xFF; // Mouse-V Low
   data_payload[ROW_COUNT + 6] = EOT;
 #else
   data_payload[ROW_COUNT] = EOT;
