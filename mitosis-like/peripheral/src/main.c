@@ -7,7 +7,8 @@
 
 #include "main.h"
 
-// #define PMW3360_ENABLE /* Comment out to disable PMW3360. */
+#define PMW3360_ENABLE /* Comment out to disable PMW3360. */
+#define RIGHT
 
 /* Key matrix size. */
 #define ROW_COUNT (5)
@@ -16,7 +17,8 @@
 #define PIPE_NUMBER (0)       /* Gazell pipe. */
 #define MAX_TX_ATTEMPTS (100) /* Maximum number of transmission attempts */
 
-#ifdef PMW3360_ENABLE
+// #ifdef PMW3360_ENABLE
+#ifdef RIGHT 
   #define TX_PAYLOAD_LENGTH (ROW_COUNT + 6 + 1)
 #else
   #define TX_PAYLOAD_LENGTH (ROW_COUNT + 1)
@@ -306,7 +308,8 @@ static void gzll_tx_result_handler(struct gzll_tx_result *tx_result)
   /* Load data payload into the TX queue. */
   memcpy(data_payload, raw_keymatrix, ROW_COUNT);
 
-#ifdef PMW3360_ENABLE
+// #ifdef PMW3360_ENABLE
+#ifdef RIGHT 
   data_payload[ROW_COUNT] = mouse_x >> 8;       // Mouse-X High
   data_payload[ROW_COUNT + 1] = mouse_x & 0xFF; // Mouse-X Low
   data_payload[ROW_COUNT + 2] = mouse_y >> 8;   // Mouse-Y High
