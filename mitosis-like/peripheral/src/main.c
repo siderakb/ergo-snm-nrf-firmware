@@ -18,7 +18,7 @@
 #define MAX_TX_ATTEMPTS (100) /* Maximum number of transmission attempts */
 
 // #ifdef PMW3360_ENABLE
-#ifdef RIGHT 
+#ifdef RIGHT
   #define TX_PAYLOAD_LENGTH (ROW_COUNT + 6 + 1)
 #else
   #define TX_PAYLOAD_LENGTH (ROW_COUNT + 1)
@@ -309,7 +309,7 @@ static void gzll_tx_result_handler(struct gzll_tx_result *tx_result)
   memcpy(data_payload, raw_keymatrix, ROW_COUNT);
 
 // #ifdef PMW3360_ENABLE
-#ifdef RIGHT 
+#ifdef RIGHT
   data_payload[ROW_COUNT] = mouse_x >> 8;       // Mouse-X High
   data_payload[ROW_COUNT + 1] = mouse_x & 0xFF; // Mouse-X Low
   data_payload[ROW_COUNT + 2] = mouse_y >> 8;   // Mouse-Y High

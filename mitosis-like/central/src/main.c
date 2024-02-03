@@ -18,7 +18,7 @@
 #define EOT (0xFE)
 #define ACK (0xF6)
 
-/* UART. */
+/* UART */
 static const struct device *qmk_uart_device = DEVICE_DT_GET(DT_NODELABEL(uart1));
 
 /* queue to store up to 10 messages (aligned to 4-byte boundary) */

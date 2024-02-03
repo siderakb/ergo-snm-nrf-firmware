@@ -125,7 +125,7 @@
 		compatible = "pixart,pmw3360";
 		reg = <0>;
 		irq-gpios = <&gpio1 4 GPIO_ACTIVE_LOW>;
-		spi-max-frequency = <600000>;
+		spi-max-frequency = <1400000>; // 2MHz max for PMW3360
 		label = "pmw3360";
 	};
 };
@@ -148,7 +148,9 @@
 
 &uart0_default {
 	group1 {
-		psels = <NRF_PSEL(UART_TX, 0, 6)>;
+		psels = <NRF_PSEL(UART_TX, 0, 6)>,
+		        <NRF_PSEL(UART_RX, 0, 8)>,
+		        <NRF_PSEL(UART_CTS, 0, 7)>;
 	};
 };
 

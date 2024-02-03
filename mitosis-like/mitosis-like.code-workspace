@@ -18,11 +18,5 @@
 			"${workspaceFolder:central}",
 			"${workspaceFolder:peripheral}",
 		],
-		"files.associations": {
-			"kernel.h": "c",
-			"main.h": "c",
-			"nrf_gzll.h": "c",
-			"gzll_glue.h": "c"
-		},
 	}
 }
